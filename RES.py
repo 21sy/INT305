@@ -9,13 +9,13 @@ import matplotlib.pyplot as plt
 import time
 import copy
 
-# 数据预处理
+
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5,), (0.5,))
 ])
 
-# 加载数据集
+
 trainset = datasets.MNIST('data/', download=True, train=True, transform=transform)
 valset = datasets.MNIST('data/', download=True, train=False, transform=transform)
 
@@ -27,7 +27,7 @@ dataset_sizes = {'train': len(trainset), 'val': len(valset)}
 dataloaders = {'train': trainloader, 'val': valloader}
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-# 定义残差块
+
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
         super(ResidualBlock, self).__init__()
@@ -53,22 +53,22 @@ class ResidualBlock(nn.Module):
         out = self.relu(out)
         return out
 
-# 定义残差网络
+
 class ResNet(nn.Module):
     def __init__(self, num_classes=10):
         super(ResNet, self).__init__()
 
-        # 初始卷积层
+       
         self.conv1 = nn.Conv2d(1, 32, kernel_size=3, stride=1, padding=1)
         self.bn1 = nn.BatchNorm2d(32)
         self.relu = nn.ReLU(inplace=True)
 
-        # 残差块
+        
         self.layer1 = self._make_layer(32, 32, stride=1)
         self.layer2 = self._make_layer(32, 64, stride=2)
         self.layer3 = self._make_layer(64, 128, stride=2)
 
-        # 全连接层
+        
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(128, num_classes)
 
@@ -99,20 +99,20 @@ class ResNet(nn.Module):
         x = self.fc(x)
         return x
 
-# 初始化模型
+
 model = ResNet(num_classes=10)
 if torch.cuda.is_available():
     model = model.to(device)
 
-# 定义优化器和损失函数
+
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
-# 学习率调度器
+
 exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
-# 定义训练函数
-# 修改后的 train_model 函数，添加历史记录
+
+
 def train_model(model, criterion, optimizer, scheduler, dataset_sizes, dataloaders, num_epochs=10):
     since = time.time()
 
@@ -181,16 +181,16 @@ def train_model(model, criterion, optimizer, scheduler, dataset_sizes, dataloade
     model.load_state_dict(best_model_wts)
     return model, train_loss_history, val_loss_history, train_acc_history, val_acc_history
 
-# 调用训练函数并获取历史记录
+
 model_ft, train_loss, val_loss, train_acc, val_acc = train_model(
     model, criterion, optimizer, exp_lr_scheduler, dataset_sizes, dataloaders, num_epochs=10
 )
 
-# 绘制 Loss/Accuracy Graph
+#  Loss/Accuracy Graph
 epochs = range(1, len(train_loss) + 1)
 plt.figure(figsize=(12, 6))
 
-# Loss 图
+
 plt.subplot(1, 2, 1)
 plt.plot(epochs, train_loss, label='Training Loss')
 plt.plot(epochs, val_loss, label='Validation Loss')
@@ -199,7 +199,7 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
 
-# Accuracy 图
+# Accuracy 
 plt.subplot(1, 2, 2)
 plt.plot(epochs, train_acc, label='Training Accuracy')
 plt.plot(epochs, val_acc, label='Validation Accuracy')
@@ -211,7 +211,7 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-# 测试模型准确性
+
 def evaluate_model(model, dataloader):
     model.eval()
     correct = 0
@@ -231,7 +231,7 @@ evaluate_model(model_ft, dataloaders['val'])
 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-# 生成预测和真实标签
+
 all_preds = []
 all_labels = []
 
@@ -245,11 +245,11 @@ with torch.no_grad():
         all_preds.extend(preds.cpu().numpy())
         all_labels.extend(labels.cpu().numpy())
 
-# 计算混淆矩阵
+
 cm = confusion_matrix(all_labels, all_preds)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=class_names)
 
-# 绘制混淆矩阵
+
 plt.figure(figsize=(10, 8))
 disp.plot(cmap='Blues', xticks_rotation='vertical', ax=plt.gca())
 plt.title('Confusion Matrix')
